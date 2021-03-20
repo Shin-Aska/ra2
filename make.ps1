@@ -233,6 +233,7 @@ function ParseConfigFile($fileName)
 			ReadConfigLine $line $name
 		}
 	}
+	$reader.Close()
 
 	$missing = @()
 	foreach ($name in $names)
@@ -287,6 +288,10 @@ else
 	$command = $args
 }
 
+# Set the working directory for our IO methods
+$templateDir = $pwd.Path
+[System.IO.Directory]::SetCurrentDirectory($templateDir)
+
 # Load the environment variables from the config file
 # and get the mod ID from the local environment variable
 ParseConfigFile "mod.config"
@@ -303,12 +308,13 @@ $env:MOD_SEARCH_PATHS = (Get-Item -Path ".\" -Verbose).FullName + "\mods,./mods"
 # Run the same command on the engine's make file
 if ($command -eq "all" -or $command -eq "clean")
 {
-	$templateDir = $pwd.Path
 	$versionFile = $env:ENGINE_DIRECTORY + "/VERSION"
 	$currentEngine = ""
 	if (Test-Path $versionFile)
 	{
-		$currentEngine = [System.IO.File]::OpenText($versionFile).ReadLine()
+		$reader = [System.IO.File]::OpenText($versionFile)
+		$currentEngine = $reader.ReadLine()
+		$reader.Close()
 	}
 
 	if ($currentEngine -ne "" -and $currentEngine -eq $env:ENGINE_VERSION)
